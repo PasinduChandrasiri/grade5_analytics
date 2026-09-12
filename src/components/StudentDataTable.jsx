@@ -1,15 +1,17 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Users } from "lucide-react";
+import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Users, Download, Loader2 } from "lucide-react";
+import { exportStudentRegisterPdf } from "@/lib/pdfExport";
 
-export default function StudentDataTable({ records }) {
+export default function StudentDataTable({ records, stats, fileName }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLikert, setSelectedLikert] = useState("all");
   const [selectedSchool, setSelectedSchool] = useState("all");
   const [sortField, setSortField] = useState("marks");
   const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isExporting, setIsExporting] = useState(false);
   const pageSize = 10;
 
   const uniqueSchools = useMemo(() => {
@@ -55,6 +57,28 @@ export default function StudentDataTable({ records }) {
     setCurrentPage(1);
   };
 
+  const handleExportPdf = async () => {
+    try {
+      setIsExporting(true);
+      const activeFilters = [];
+      if (selectedSchool !== "all") activeFilters.push(`School: ${selectedSchool}`);
+      if (selectedLikert !== "all") activeFilters.push(`Score: ${selectedLikert}`);
+      if (searchTerm.trim()) activeFilters.push(`Search: "${searchTerm.trim()}"`);
+      const filterSummary = activeFilters.length > 0 ? activeFilters.join(" | ") : "All Students";
+
+      await exportStudentRegisterPdf({
+        records: filteredRecords,
+        fileName,
+        stats,
+        filterSummary,
+      });
+    } catch (error) {
+      console.error("Failed to export Student Register PDF:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (!records || records.length === 0) return null;
 
   return (
@@ -81,7 +105,7 @@ export default function StudentDataTable({ records }) {
               placeholder="Search ID or School..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-48"
+              className="pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-44"
             />
           </div>
 
@@ -90,7 +114,7 @@ export default function StudentDataTable({ records }) {
             <select
               value={selectedSchool}
               onChange={(e) => { setSelectedSchool(e.target.value); setCurrentPage(1); }}
-              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto max-w-full sm:max-w-[160px]"
+              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto max-w-full sm:max-w-[150px]"
             >
               <option value="all">All Schools</option>
               {uniqueSchools.map((s) => (
@@ -112,6 +136,27 @@ export default function StudentDataTable({ records }) {
             <option value="2">Score 2 – Poor</option>
             <option value="1">Score 1 – Very Poor</option>
           </select>
+
+          {/* Download PDF Button */}
+          <button
+            id="export-register-pdf-btn"
+            onClick={handleExportPdf}
+            disabled={isExporting}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-800 hover:border-cyan-500/50 shadow-sm transition-all disabled:opacity-50 shrink-0"
+            title="Download Student Evaluation Register as PDF"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                <span>Generating PDF...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Download PDF ({filteredRecords.length})</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 

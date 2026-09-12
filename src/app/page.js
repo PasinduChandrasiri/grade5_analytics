@@ -122,19 +122,33 @@ export default function HomePage() {
             </div>
 
             {/* Bar Chart: Frequency per Likert level */}
-            <LikertDistributionChart distribution={stats.distribution} />
+            <LikertDistributionChart
+              distribution={stats.distribution}
+              stats={stats}
+              fileName={fileName}
+            />
 
             {/* Education Zone & School Comparison Bar Chart + School Grade Cards */}
             <SchoolComparisonChart
               schoolBreakdown={stats.schoolBreakdown}
               zoneBreakdown={stats.zoneBreakdown}
+              stats={stats}
+              fileName={fileName}
             />
 
             {/* Student Data Table */}
-            <StudentDataTable records={records} />
+            <StudentDataTable
+              records={records}
+              stats={stats}
+              fileName={fileName}
+            />
 
-            {/* Export Button */}
-            <ExportControls records={records} />
+            {/* Export Controls */}
+            <ExportControls
+              records={records}
+              stats={stats}
+              fileName={fileName}
+            />
 
           </div>
         )}

@@ -12,10 +12,12 @@ import {
   Legend,
   ReferenceLine,
 } from "recharts";
-import { MapPin, TrendingUp, TrendingDown } from "lucide-react";
+import { MapPin, TrendingUp, TrendingDown, Download, Loader2 } from "lucide-react";
+import { exportSchoolComparisonPdf } from "@/lib/pdfExport";
 
-export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown }) {
+export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, stats, fileName }) {
   const [selectedZone, setSelectedZone] = useState("all");
+  const [isExporting, setIsExporting] = useState(false);
 
   if (!schoolBreakdown || schoolBreakdown.length === 0) return null;
 
@@ -29,11 +31,28 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown }
     ? zoneBreakdown?.find(z => z.zoneName === selectedZone)
     : null;
 
+  const handleExportPdf = async () => {
+    try {
+      setIsExporting(true);
+      await exportSchoolComparisonPdf({
+        schoolBreakdown: filteredSchools,
+        zoneBreakdown,
+        stats,
+        fileName,
+        chartElementId: "school-comparison-chart-container",
+      });
+    } catch (error) {
+      console.error("Failed to export School Comparison PDF:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
       
       {/* Header & Zone Filter */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-cyan-400 shrink-0" />
@@ -46,24 +65,46 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown }
           </p>
         </div>
 
-        {/* Zone Selector Filter */}
-        {zoneBreakdown && zoneBreakdown.length > 0 && (
-          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
-            <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Select Zone:</span>
-            <select
-              value={selectedZone}
-              onChange={(e) => setSelectedZone(e.target.value)}
-              className="py-1.5 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
-            >
-              <option value="all">All Education Zones ({zoneBreakdown.length})</option>
-              {zoneBreakdown.map((z) => (
-                <option key={z.zoneName} value={z.zoneName}>
-                  {z.zoneName} (Mean: {z.meanLikert.toFixed(2)})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
+        {/* Action Controls: Zone Selector & PDF Export */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 w-full lg:w-auto">
+          {zoneBreakdown && zoneBreakdown.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Select Zone:</span>
+              <select
+                value={selectedZone}
+                onChange={(e) => setSelectedZone(e.target.value)}
+                className="py-1.5 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
+              >
+                <option value="all">All Education Zones ({zoneBreakdown.length})</option>
+                {zoneBreakdown.map((z) => (
+                  <option key={z.zoneName} value={z.zoneName}>
+                    {z.zoneName} (Mean: {z.meanLikert.toFixed(2)})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <button
+            id="export-school-pdf-btn"
+            onClick={handleExportPdf}
+            disabled={isExporting}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-800 hover:border-cyan-500/50 shadow-sm transition-all disabled:opacity-50 shrink-0"
+            title="Download Education Zone & School Performance Comparison as PDF"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+                <span>Generating PDF...</span>
+              </>
+            ) : (
+              <>
+                <Download className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Download PDF</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Zone Overview Summary Banner */}
@@ -108,7 +149,7 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown }
       )}
 
       {/* Comparative Bar Chart */}
-      <div className="h-60 sm:h-72 w-full pt-2">
+      <div id="school-comparison-chart-container" className="h-60 sm:h-72 w-full pt-2 p-2 bg-slate-950/40 rounded-xl">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={filteredSchools}

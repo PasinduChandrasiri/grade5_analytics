@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -11,7 +11,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, Download, Loader2 } from "lucide-react";
+import { exportLikertDistributionPdf } from "@/lib/pdfExport";
 
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
@@ -47,14 +48,32 @@ const CustomBarLabel = ({ x, y, width, value }) => {
   );
 };
 
-export default function LikertDistributionChart({ distribution }) {
+export default function LikertDistributionChart({ distribution, stats, fileName }) {
+  const [isExporting, setIsExporting] = useState(false);
+
   if (!distribution || distribution.length === 0) return null;
+
+  const handleExportPdf = async () => {
+    try {
+      setIsExporting(true);
+      await exportLikertDistributionPdf({
+        distribution,
+        stats,
+        fileName,
+        chartElementId: "likert-distribution-chart-container",
+      });
+    } catch (error) {
+      console.error("Failed to export Likert Distribution PDF:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
       
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-cyan-400 shrink-0" />
@@ -66,10 +85,30 @@ export default function LikertDistributionChart({ distribution }) {
             Number of students in each 5-point Likert performance category.
           </p>
         </div>
+
+        <button
+          id="export-likert-pdf-btn"
+          onClick={handleExportPdf}
+          disabled={isExporting}
+          className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-800 hover:border-cyan-500/50 shadow-sm transition-all disabled:opacity-50 shrink-0"
+          title="Download Likert Score Frequency Distribution as PDF"
+        >
+          {isExporting ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
+              <span>Generating PDF...</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Download PDF</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Bar Chart Container */}
-      <div className="h-56 sm:h-72 w-full">
+      <div id="likert-distribution-chart-container" className="h-56 sm:h-72 w-full p-2 bg-slate-950/40 rounded-xl">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={distribution}
