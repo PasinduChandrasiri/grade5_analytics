@@ -78,14 +78,14 @@ export default function LikertDistributionChart({ distribution, stats, fileName,
   const classLabel = filterContext.classVal && filterContext.classVal !== "all" ? filterContext.classVal : null;
 
   return (
-    <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
+    <section aria-labelledby="likert-distribution-heading" className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <BarChart3 className="w-5 h-5 text-cyan-400 shrink-0" />
-            <h3 className="text-base sm:text-lg font-bold text-slate-100">
+            <h3 id="likert-distribution-heading" className="text-base sm:text-lg font-bold text-slate-100">
               Likert Score Frequency Distribution
             </h3>
             <span className="px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-[11px] font-semibold">
@@ -111,6 +111,7 @@ export default function LikertDistributionChart({ distribution, stats, fileName,
           disabled={isExporting}
           className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-800 hover:border-cyan-500/50 shadow-sm transition-all disabled:opacity-50 shrink-0"
           title="Download Likert Score Frequency Distribution as PDF"
+          aria-label="Download Likert Score Frequency Distribution as PDF"
         >
           {isExporting ? (
             <>
@@ -182,6 +183,6 @@ export default function LikertDistributionChart({ distribution, stats, fileName,
         ))}
       </div>
 
-    </div>
+    </section>
   );
 }

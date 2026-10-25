@@ -127,10 +127,10 @@ export default function HomePage() {
             <CsvUploader onDataLoaded={handleDataLoaded} onLoadSample={handleLoadSample} />
 
             {/* ── LIKERT SCALE REFERENCE ── */}
-            <div className="max-w-4xl mx-auto">
-              <p className="text-xs text-slate-500 text-center uppercase tracking-widest mb-3 font-semibold">
+            <section aria-labelledby="scale-reference-heading" className="max-w-4xl mx-auto">
+              <h2 id="scale-reference-heading" className="text-xs text-slate-500 text-center uppercase tracking-widest mb-3 font-semibold">
                 Universal 5-Point Likert Performance Scale Reference
-              </p>
+              </h2>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {[
                   { score: 5, range: "81–100%", label: "Excellent",    color: "border-emerald-500/40 text-emerald-400 bg-emerald-500/10" },
@@ -146,7 +146,7 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
           </div>
         )}
 
@@ -155,7 +155,7 @@ export default function HomePage() {
           <div id="dashboard-top" className="space-y-6 sm:space-y-8">
 
             {/* Status bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
+            <header className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
                 <span className="text-slate-400">Dataset:</span>
@@ -174,18 +174,21 @@ export default function HomePage() {
               </div>
               <button
                 onClick={handleReset}
+                aria-label="Upload a new CSV file"
                 className="text-xs text-cyan-400 hover:text-cyan-300 underline underline-offset-2 font-semibold transition-colors"
               >
                 Upload New CSV
               </button>
-            </div>
+            </header>
 
             {/* Cohort Filter Control Bar */}
-            <div className="p-4 rounded-xl bg-slate-900/95 border border-slate-800 shadow-xl space-y-3">
+            <section aria-labelledby="cohort-filters-heading" className="p-4 rounded-xl bg-slate-900/95 border border-slate-800 shadow-xl space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Cohort Scope Filters</span>
+                  <h2 id="cohort-filters-heading" className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                    Cohort Scope Filters
+                  </h2>
                   <span className="text-[11px] text-slate-400 hidden md:inline">
                     &bull; Charts and reports instantly update to the selected subject and grade
                   </span>
@@ -193,6 +196,7 @@ export default function HomePage() {
                 {isAnyFilterActive && (
                   <button
                     onClick={handleResetFilters}
+                    aria-label="Reset all cohort filters to default"
                     className="flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
                   >
                     <RotateCcw className="w-3 h-3" />
@@ -204,11 +208,13 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {/* Subject Selector */}
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  <label htmlFor="cohort-subject-select" className="block text-[11px] font-medium text-slate-400 mb-1">
                     Subject
                   </label>
                   <select
+                    id="cohort-subject-select"
                     value={selectedSubject}
+                    aria-label="Filter cohort by subject"
                     onChange={(e) => setSelectedSubject(e.target.value)}
                     className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 focus:outline-none focus:border-cyan-500 transition-colors"
                   >
@@ -221,11 +227,13 @@ export default function HomePage() {
 
                 {/* Grade Selector */}
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  <label htmlFor="cohort-grade-select" className="block text-[11px] font-medium text-slate-400 mb-1">
                     Grade Level
                   </label>
                   <select
+                    id="cohort-grade-select"
                     value={selectedGrade}
+                    aria-label="Filter cohort by grade level"
                     onChange={(e) => setSelectedGrade(e.target.value)}
                     className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-indigo-300 focus:outline-none focus:border-indigo-500 transition-colors"
                   >
@@ -238,11 +246,13 @@ export default function HomePage() {
 
                 {/* Class Selector */}
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                  <label htmlFor="cohort-class-select" className="block text-[11px] font-medium text-slate-400 mb-1">
                     Class / Section
                   </label>
                   <select
+                    id="cohort-class-select"
                     value={selectedClass}
+                    aria-label="Filter cohort by class section"
                     onChange={(e) => setSelectedClass(e.target.value)}
                     className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-emerald-300 focus:outline-none focus:border-emerald-500 transition-colors"
                   >
@@ -253,7 +263,7 @@ export default function HomePage() {
                   </select>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* Zero Records Warning */}
             {activeCohortRecords.length === 0 ? (

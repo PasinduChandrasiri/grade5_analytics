@@ -53,14 +53,14 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, 
   const gradeLabel = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : "All Grades";
 
   return (
-    <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
+    <section aria-labelledby="school-comparison-heading" className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
       
       {/* Header & Zone Filter */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <MapPin className="w-5 h-5 text-cyan-400 shrink-0" />
-            <h3 className="text-base sm:text-lg font-bold text-slate-100">
+            <h3 id="school-comparison-heading" className="text-base sm:text-lg font-bold text-slate-100">
               Education Zone & School Performance Comparison
             </h3>
             <span className="px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-[11px] font-semibold">
@@ -83,6 +83,7 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, 
               <select
                 value={selectedZone}
                 onChange={(e) => setSelectedZone(e.target.value)}
+                aria-label="Filter schools by education zone"
                 className="py-1.5 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
               >
                 <option value="all">All Education Zones ({zoneBreakdown.length})</option>
@@ -101,6 +102,7 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, 
             disabled={isExporting}
             className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-800 hover:border-cyan-500/50 shadow-sm transition-all disabled:opacity-50 shrink-0"
             title="Download Education Zone & School Performance Comparison as PDF"
+            aria-label="Download Education Zone & School Performance Comparison as PDF"
           >
             {isExporting ? (
               <>
@@ -251,6 +253,6 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, 
         })}
       </div>
 
-    </div>
+    </section>
   );
 }

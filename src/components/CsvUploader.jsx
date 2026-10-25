@@ -83,11 +83,11 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
+    <section aria-labelledby="uploader-heading" className="w-full max-w-4xl mx-auto">
       <div className="relative rounded-2xl bg-slate-900/90 border border-slate-800 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
         
         <div className="text-center mb-6">
-          <h2 className="text-2xl font-extrabold text-slate-100 tracking-tight">
+          <h2 id="uploader-heading" className="text-2xl font-extrabold text-slate-100 tracking-tight">
             Universal Educational Performance Evaluator
           </h2>
           <p className="text-sm text-slate-400 mt-1 max-w-xl mx-auto">
@@ -97,6 +97,15 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
 
         {/* Drag and Drop Zone */}
         <div
+          role="button"
+          tabIndex={0}
+          aria-label="Upload CSV file by dropping here or clicking to browse"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }
+          }}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -111,6 +120,7 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
             ref={fileInputRef}
             type="file"
             accept=".csv"
+            aria-label="CSV file input"
             onChange={handleFileChange}
             className="hidden"
           />
@@ -144,6 +154,7 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
             <div className="flex items-center gap-3 pt-2">
               <button
                 type="button"
+                aria-label="Browse CSV file from device"
                 className="px-4 py-2 text-xs font-semibold rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white shadow-md shadow-cyan-500/20 transition-all hover:scale-105"
               >
                 Browse CSV File
@@ -154,7 +165,7 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
 
         {/* Error Feedback */}
         {errorMsg && (
-          <div className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+          <div role="alert" className="mt-4 p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -168,6 +179,7 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
           </div>
           <button
             type="button"
+            aria-label="Load demo dataset"
             onClick={(e) => {
               e.stopPropagation();
               onLoadSample();
@@ -180,6 +192,6 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
         </div>
 
       </div>
-    </div>
+    </section>
   );
 }

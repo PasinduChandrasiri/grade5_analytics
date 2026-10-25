@@ -129,12 +129,12 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
   if (!records || records.length === 0) return null;
 
   return (
-    <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-4">
+    <section aria-labelledby="student-register-heading" className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-4">
 
       {/* Header & Filters */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 border-b border-slate-800">
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
+          <h3 id="student-register-heading" className="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2">
             <Users className="w-5 h-5 text-cyan-400 shrink-0" />
             Student Evaluation Register
           </h3>
@@ -151,6 +151,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
               type="text"
               placeholder="Search ID, School, Subject..."
               value={searchTerm}
+              aria-label="Search student by ID, school, or subject"
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-48"
             />
@@ -160,6 +161,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           {uniqueSubjects.length > 1 && (
             <select
               value={selectedSubject}
+              aria-label="Filter students by subject"
               onChange={(e) => { setSelectedSubject(e.target.value); setCurrentPage(1); }}
               className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
             >
@@ -174,6 +176,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           {uniqueGrades.length > 1 && (
             <select
               value={selectedGrade}
+              aria-label="Filter students by grade"
               onChange={(e) => { setSelectedGrade(e.target.value); setCurrentPage(1); }}
               className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
             >
@@ -188,6 +191,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           {uniqueClasses.length > 1 && (
             <select
               value={selectedClass}
+              aria-label="Filter students by class section"
               onChange={(e) => { setSelectedClass(e.target.value); setCurrentPage(1); }}
               className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
             >
@@ -202,6 +206,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           {uniqueSchools.length > 1 && (
             <select
               value={selectedSchool}
+              aria-label="Filter students by school"
               onChange={(e) => { setSelectedSchool(e.target.value); setCurrentPage(1); }}
               className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto max-w-full sm:max-w-[140px]"
             >
@@ -215,6 +220,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           {/* Likert filter */}
           <select
             value={selectedLikert}
+            aria-label="Filter students by Likert score"
             onChange={(e) => { setSelectedLikert(e.target.value); setCurrentPage(1); }}
             className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
           >
@@ -233,6 +239,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
             disabled={isExporting}
             className="flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-950 hover:bg-slate-800 text-cyan-300 hover:text-cyan-200 border border-slate-800 hover:border-cyan-500/50 shadow-sm transition-all disabled:opacity-50 shrink-0"
             title="Download Student Evaluation Register as PDF"
+            aria-label="Download Student Evaluation Register as PDF"
           >
             {isExporting ? (
               <>
@@ -368,6 +375,7 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
+            aria-label="Previous page"
             className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -376,12 +384,13 @@ export default function StudentDataTable({ records, stats, fileName, filterConte
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
+            aria-label="Next page"
             className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

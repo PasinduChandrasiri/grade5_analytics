@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://universal-educational-performance-evaluator.vercel.app/sitemap.xml

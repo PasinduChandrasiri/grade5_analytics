@@ -39,6 +39,7 @@ export default function Navbar({ onLoadSample, hasData, onReset }) {
             onClick={() => downloadCsvFile(TEMPLATE_CSV_CONTENT, "universal_evaluation_template.csv")}
             className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-all hover:text-slate-100"
             title="Download formatted sample CSV template"
+            aria-label="Download CSV evaluation template"
           >
             <Download className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <span className="hidden sm:inline">Download Template</span>
@@ -48,6 +49,7 @@ export default function Navbar({ onLoadSample, hasData, onReset }) {
           <button
             onClick={onLoadSample}
             className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg text-cyan-300 bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-800/60 shadow-sm shadow-cyan-950 transition-all"
+            aria-label="Load sample evaluation data"
           >
             <Sparkles className="w-3.5 h-3.5 text-cyan-400 animate-pulse shrink-0" />
             <span className="hidden sm:inline">Load Demo Data</span>
@@ -58,6 +60,7 @@ export default function Navbar({ onLoadSample, hasData, onReset }) {
             <button
               onClick={onReset}
               className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg text-rose-300 bg-rose-950/30 hover:bg-rose-900/40 border border-rose-800/40 transition-all"
+              aria-label="Reset loaded data"
             >
               <RefreshCw className="w-3.5 h-3.5 text-rose-400 shrink-0" />
               <span>Reset</span>
