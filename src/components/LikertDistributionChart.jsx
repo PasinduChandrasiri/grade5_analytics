@@ -14,15 +14,18 @@ import {
 import { BarChart3, Download, Loader2 } from "lucide-react";
 import { exportLikertDistributionPdf } from "@/lib/pdfExport";
 
-const CustomTooltip = ({ active, payload }) => {
+const CustomTooltip = ({ active, payload, filterContext }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
+    const subj = filterContext?.subject && filterContext.subject !== "all" ? filterContext.subject : "All Subjects";
+    const gr = filterContext?.grade && filterContext.grade !== "all" ? filterContext.grade : "All Grades";
     return (
       <div className="rounded-lg bg-slate-900 border border-slate-700 p-3 shadow-xl text-xs space-y-1 z-50">
         <div className="flex items-center gap-2 font-bold text-slate-100">
           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: data.color }} />
           <span>Score {data.score}: {data.label}</span>
         </div>
+        <p className="text-slate-400">Scope: <strong className="text-cyan-300">{subj} ({gr})</strong></p>
         <p className="text-slate-400">Range: <strong className="text-slate-200">{data.rangeLabel}</strong></p>
         <p className="text-slate-400">Frequency: <strong className="text-cyan-400">{data.count} student{data.count !== 1 ? "s" : ""}</strong></p>
         <p className="text-slate-400">Proportion: <strong className="text-emerald-400">{data.percentage}%</strong></p>
@@ -48,7 +51,7 @@ const CustomBarLabel = ({ x, y, width, value }) => {
   );
 };
 
-export default function LikertDistributionChart({ distribution, stats, fileName }) {
+export default function LikertDistributionChart({ distribution, stats, fileName, filterContext = {} }) {
   const [isExporting, setIsExporting] = useState(false);
 
   if (!distribution || distribution.length === 0) return null;
@@ -61,6 +64,7 @@ export default function LikertDistributionChart({ distribution, stats, fileName 
         stats,
         fileName,
         chartElementId: "likert-distribution-chart-container",
+        filterContext,
       });
     } catch (error) {
       console.error("Failed to export Likert Distribution PDF:", error);
@@ -69,20 +73,35 @@ export default function LikertDistributionChart({ distribution, stats, fileName 
     }
   };
 
+  const subjectLabel = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : "All Subjects";
+  const gradeLabel = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : "All Grades";
+  const classLabel = filterContext.classVal && filterContext.classVal !== "all" ? filterContext.classVal : null;
+
   return (
     <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <BarChart3 className="w-5 h-5 text-cyan-400 shrink-0" />
             <h3 className="text-base sm:text-lg font-bold text-slate-100">
               Likert Score Frequency Distribution
             </h3>
+            <span className="px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-[11px] font-semibold">
+              {subjectLabel}
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-800/60 text-indigo-300 text-[11px] font-semibold">
+              {gradeLabel}
+            </span>
+            {classLabel && (
+              <span className="px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[11px] font-semibold">
+                {classLabel}
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Number of students in each 5-point Likert performance category.
+            Student counts and proportions across 5-point Likert performance tiers for <strong className="text-slate-300">{subjectLabel}</strong> ({gradeLabel}).
           </p>
         </div>
 
@@ -129,7 +148,7 @@ export default function LikertDistributionChart({ distribution, stats, fileName 
               tickLine={false}
               axisLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+            <Tooltip content={<CustomTooltip filterContext={filterContext} />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
             <Bar dataKey="count" radius={[8, 8, 0, 0]} maxBarSize={56} label={<CustomBarLabel />}>
               {distribution.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.85} />

@@ -40,7 +40,7 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
           setErrorMsg(
             errors.length > 0
               ? errors[0]
-              : "Could not parse student scores. Ensure headers include 'Student_ID', 'Marks_Percentage', 'School_Name', and 'Education_Zone'."
+              : "Could not parse student scores. Ensure headers include 'Student_ID', 'Marks_Percentage', 'School_Name', 'Zone_Name', 'Grade', 'Class', and 'Subject'."
           );
           return;
         }
@@ -88,10 +88,10 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
         
         <div className="text-center mb-6">
           <h2 className="text-2xl font-extrabold text-slate-100 tracking-tight">
-            Mathematics Evaluation CSV Uploader
+            Universal Educational Performance Evaluator
           </h2>
-          <p className="text-sm text-slate-400 mt-1 max-w-lg mx-auto">
-            Upload your CSV file containing student marks to calculate Likert scale distribution, overall mean, and generate school comparison reports.
+          <p className="text-sm text-slate-400 mt-1 max-w-xl mx-auto">
+            Upload your CSV file containing student marks across any subject (e.g. Mathematics, Science, Health) and grade level to calculate Likert scale distribution, cohort means, and school benchmarks.
           </p>
         </div>
 
@@ -129,12 +129,15 @@ export default function CsvUploader({ onDataLoaded, onLoadSample }) {
               <p className="text-base font-semibold text-slate-200">
                 {isProcessing ? "Processing CSV Data..." : "Drag & Drop your .csv file here"}
               </p>
-              <p className="text-xs text-slate-400 mt-1 flex flex-wrap items-center justify-center gap-1">
-                <span>Expected CSV headers:</span>
+              <p className="text-xs text-slate-400 mt-2 flex flex-wrap items-center justify-center gap-1 max-w-2xl mx-auto">
+                <span className="font-medium text-slate-300">Expected CSV headers:</span>
                 <code className="text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Student_ID</code>,
                 <code className="text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Marks_Percentage</code>,
                 <code className="text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">School_Name</code>,
-                <code className="text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Education_Zone</code>
+                <code className="text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Zone_Name</code>,
+                <code className="text-indigo-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Grade</code>,
+                <code className="text-indigo-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Class</code>,
+                <code className="text-emerald-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">Subject</code>
               </p>
             </div>
 

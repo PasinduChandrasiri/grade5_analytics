@@ -17,24 +17,26 @@ export default function Navbar({ onLoadSample, hasData, onReset }) {
             </div>
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h1 className="font-bold text-base sm:text-lg text-slate-100 tracking-tight truncate">
-                MathLikert<span className="text-cyan-400">.Analytics</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-bold text-sm sm:text-base lg:text-lg text-slate-100 tracking-tight truncate">
+                Universal Educational Performance Evaluator
               </h1>
-              <span className="hidden md:inline-block px-2 py-0.5 text-[10px] sm:text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
-                5-Point Scale Engine
+              <span className="hidden xl:inline-block px-2 py-0.5 text-[10px] font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                Multi-Subject Likert Engine
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 hidden sm:block truncate">
-              Mathematics Performance & Likert Scale Evaluation Dashboard
-            </p>
+            <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400">
+              <span className="hidden lg:inline truncate">Comprehensive Multi-Subject Evaluation Dashboard</span>
+              <span className="hidden lg:inline text-slate-600">&bull;</span>
+              <span className="text-cyan-400 font-medium truncate">Implemented by - D.M.S. Dassanayake</span>
+            </div>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <button
-            onClick={() => downloadCsvFile(TEMPLATE_CSV_CONTENT, "sample_input_template.csv")}
+            onClick={() => downloadCsvFile(TEMPLATE_CSV_CONTENT, "universal_evaluation_template.csv")}
             className="flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-lg text-slate-300 bg-slate-900 hover:bg-slate-800 border border-slate-700 transition-all hover:text-slate-100"
             title="Download formatted sample CSV template"
           >

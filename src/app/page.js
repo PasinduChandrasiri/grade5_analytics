@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Papa from "papaparse";
 import confetti from "canvas-confetti";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import CsvUploader from "@/components/CsvUploader";
 import LikertDistributionChart from "@/components/LikertDistributionChart";
 import SchoolComparisonChart from "@/components/SchoolComparisonChart";
@@ -11,12 +12,16 @@ import StudentDataTable from "@/components/StudentDataTable";
 import ExportControls from "@/components/ExportControls";
 import { parseAndCleanCsvData, aggregateEvaluationData } from "@/lib/likertEngine";
 import { SAMPLE_CSV_DATA } from "@/lib/sampleData";
-import { Sparkles } from "lucide-react";
+import { Filter, RotateCcw, AlertTriangle } from "lucide-react";
 
 export default function HomePage() {
   const [records, setRecords] = useState(null);
-  const [stats, setStats] = useState(null);
   const [fileName, setFileName] = useState(null);
+
+  // Cohort Filters
+  const [selectedSubject, setSelectedSubject] = useState("all");
+  const [selectedGrade, setSelectedGrade] = useState("all");
+  const [selectedClass, setSelectedClass] = useState("all");
 
   const triggerCelebration = () => {
     confetti({
@@ -29,9 +34,10 @@ export default function HomePage() {
 
   const handleDataLoaded = (newRecords, sourceName = "Uploaded File") => {
     setRecords(newRecords);
-    const aggStats = aggregateEvaluationData(newRecords);
-    setStats(aggStats);
     setFileName(sourceName);
+    setSelectedSubject("all");
+    setSelectedGrade("all");
+    setSelectedClass("all");
     triggerCelebration();
     // Scroll to dashboard after short delay
     setTimeout(() => {
@@ -46,17 +52,65 @@ export default function HomePage() {
       comments: "#",
       complete: (results) => {
         const { records: sampleRecords } = parseAndCleanCsvData(results.data);
-        handleDataLoaded(sampleRecords, "Sample_Math_Evaluation.csv");
+        handleDataLoaded(sampleRecords, "Sample_Universal_Evaluation.csv");
       },
     });
   };
 
   const handleReset = () => {
     setRecords(null);
-    setStats(null);
     setFileName(null);
+    setSelectedSubject("all");
+    setSelectedGrade("all");
+    setSelectedClass("all");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleResetFilters = () => {
+    setSelectedSubject("all");
+    setSelectedGrade("all");
+    setSelectedClass("all");
+  };
+
+  // Unique lists for dropdowns
+  const uniqueSubjects = useMemo(() => {
+    if (!records) return [];
+    return Array.from(new Set(records.map((r) => r.subject))).filter(Boolean);
+  }, [records]);
+
+  const uniqueGrades = useMemo(() => {
+    if (!records) return [];
+    return Array.from(new Set(records.map((r) => r.grade))).filter(Boolean);
+  }, [records]);
+
+  const uniqueClasses = useMemo(() => {
+    if (!records) return [];
+    return Array.from(new Set(records.map((r) => r.class || r.classVal))).filter(Boolean);
+  }, [records]);
+
+  // Filtered Cohort Records
+  const activeCohortRecords = useMemo(() => {
+    if (!records) return [];
+    return records.filter((r) => {
+      const matchSubject = selectedSubject === "all" || r.subject === selectedSubject;
+      const matchGrade = selectedGrade === "all" || r.grade === selectedGrade;
+      const matchClass = selectedClass === "all" || (r.class || r.classVal) === selectedClass;
+      return matchSubject && matchGrade && matchClass;
+    });
+  }, [records, selectedSubject, selectedGrade, selectedClass]);
+
+  // Aggregated stats for the filtered cohort
+  const cohortStats = useMemo(() => {
+    return aggregateEvaluationData(activeCohortRecords);
+  }, [activeCohortRecords]);
+
+  const filterContext = useMemo(() => ({
+    subject: selectedSubject,
+    grade: selectedGrade,
+    classVal: selectedClass,
+  }), [selectedSubject, selectedGrade, selectedClass]);
+
+  const isAnyFilterActive = selectedSubject !== "all" || selectedGrade !== "all" || selectedClass !== "all";
 
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
@@ -64,7 +118,7 @@ export default function HomePage() {
       {/* Navbar */}
       <Navbar onLoadSample={handleLoadSample} hasData={!!records} onReset={handleReset} />
 
-      {/* Main */}
+      {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6 sm:space-y-8">
 
         {/* ── UPLOAD VIEW (Visible only when no CSV is loaded) ── */}
@@ -75,7 +129,7 @@ export default function HomePage() {
             {/* ── LIKERT SCALE REFERENCE ── */}
             <div className="max-w-4xl mx-auto">
               <p className="text-xs text-slate-500 text-center uppercase tracking-widest mb-3 font-semibold">
-                5-Point Likert Scale Reference
+                Universal 5-Point Likert Performance Scale Reference
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 {[
@@ -96,9 +150,9 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* ── DASHBOARD ── */}
-        {records && stats && (
-          <div id="dashboard-top" className="space-y-8">
+        {/* ── DASHBOARD VIEW ── */}
+        {records && (
+          <div id="dashboard-top" className="space-y-6 sm:space-y-8">
 
             {/* Status bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-xl bg-slate-900/90 border border-slate-800 text-xs">
@@ -107,11 +161,16 @@ export default function HomePage() {
                 <span className="text-slate-400">Dataset:</span>
                 <strong className="text-slate-200 font-mono">{fileName}</strong>
                 <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 font-mono">
-                  {records.length} records
+                  {records.length} total records
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-300 border border-indigo-800/60 font-mono">
                   {Array.from(new Set(records.map(r => r.school))).length} school(s)
                 </span>
+                {isAnyFilterActive && (
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800/60 font-mono">
+                    Filtered: {activeCohortRecords.length} records
+                  </span>
+                )}
               </div>
               <button
                 onClick={handleReset}
@@ -121,47 +180,140 @@ export default function HomePage() {
               </button>
             </div>
 
-            {/* Bar Chart: Frequency per Likert level */}
-            <LikertDistributionChart
-              distribution={stats.distribution}
-              stats={stats}
-              fileName={fileName}
-            />
+            {/* Cohort Filter Control Bar */}
+            <div className="p-4 rounded-xl bg-slate-900/95 border border-slate-800 shadow-xl space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Cohort Scope Filters</span>
+                  <span className="text-[11px] text-slate-400 hidden md:inline">
+                    &bull; Charts and reports instantly update to the selected subject and grade
+                  </span>
+                </div>
+                {isAnyFilterActive && (
+                  <button
+                    onClick={handleResetFilters}
+                    className="flex items-center gap-1 text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition-colors"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Reset Cohort Filters</span>
+                  </button>
+                )}
+              </div>
 
-            {/* Education Zone & School Comparison Bar Chart + School Grade Cards */}
-            <SchoolComparisonChart
-              schoolBreakdown={stats.schoolBreakdown}
-              zoneBreakdown={stats.zoneBreakdown}
-              stats={stats}
-              fileName={fileName}
-            />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Subject Selector */}
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                    Subject
+                  </label>
+                  <select
+                    value={selectedSubject}
+                    onChange={(e) => setSelectedSubject(e.target.value)}
+                    className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-cyan-300 focus:outline-none focus:border-cyan-500 transition-colors"
+                  >
+                    <option value="all">All Subjects ({uniqueSubjects.length})</option>
+                    {uniqueSubjects.map((sub) => (
+                      <option key={sub} value={sub}>{sub}</option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* Student Data Table */}
-            <StudentDataTable
-              records={records}
-              stats={stats}
-              fileName={fileName}
-            />
+                {/* Grade Selector */}
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                    Grade Level
+                  </label>
+                  <select
+                    value={selectedGrade}
+                    onChange={(e) => setSelectedGrade(e.target.value)}
+                    className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-indigo-300 focus:outline-none focus:border-indigo-500 transition-colors"
+                  >
+                    <option value="all">All Grades ({uniqueGrades.length})</option>
+                    {uniqueGrades.map((gr) => (
+                      <option key={gr} value={gr}>{gr}</option>
+                    ))}
+                  </select>
+                </div>
 
-            {/* Export Controls */}
-            <ExportControls
-              records={records}
-              stats={stats}
-              fileName={fileName}
-            />
+                {/* Class Selector */}
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-400 mb-1">
+                    Class / Section
+                  </label>
+                  <select
+                    value={selectedClass}
+                    onChange={(e) => setSelectedClass(e.target.value)}
+                    className="w-full py-2 px-3 text-xs font-semibold rounded-lg bg-slate-950 border border-slate-800 text-emerald-300 focus:outline-none focus:border-emerald-500 transition-colors"
+                  >
+                    <option value="all">All Classes ({uniqueClasses.length})</option>
+                    {uniqueClasses.map((cls) => (
+                      <option key={cls} value={cls}>{cls}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Zero Records Warning */}
+            {activeCohortRecords.length === 0 ? (
+              <div className="p-8 rounded-xl bg-slate-900 border border-slate-800 text-center space-y-3">
+                <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto" />
+                <h4 className="text-sm font-bold text-slate-200">No Student Records Found</h4>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  No records match the current combination of Subject, Grade, and Class. Try selecting different filter criteria or reset filters.
+                </p>
+                <button
+                  onClick={handleResetFilters}
+                  className="px-4 py-1.5 text-xs font-semibold rounded-lg bg-cyan-950 border border-cyan-800 text-cyan-300 hover:bg-cyan-900 transition-colors"
+                >
+                  Reset Cohort Filters
+                </button>
+              </div>
+            ) : cohortStats && (
+              <>
+                {/* Bar Chart: Frequency per Likert level */}
+                <LikertDistributionChart
+                  distribution={cohortStats.distribution}
+                  stats={cohortStats}
+                  fileName={fileName}
+                  filterContext={filterContext}
+                />
+
+                {/* Education Zone & School Comparison Bar Chart + School Grade Cards */}
+                <SchoolComparisonChart
+                  schoolBreakdown={cohortStats.schoolBreakdown}
+                  zoneBreakdown={cohortStats.zoneBreakdown}
+                  stats={cohortStats}
+                  fileName={fileName}
+                  filterContext={filterContext}
+                />
+
+                {/* Student Data Table */}
+                <StudentDataTable
+                  records={activeCohortRecords}
+                  stats={cohortStats}
+                  fileName={fileName}
+                  filterContext={filterContext}
+                />
+
+                {/* Export Controls */}
+                <ExportControls
+                  records={activeCohortRecords}
+                  stats={cohortStats}
+                  fileName={fileName}
+                  filterContext={filterContext}
+                />
+              </>
+            )}
 
           </div>
         )}
 
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-5 text-center text-xs text-slate-600">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>Mathematics Likert Performance Evaluator &copy; {new Date().getFullYear()}</span>
-          <span>Next.js App Router &bull; Vercel Ready</span>
-        </div>
-      </footer>
+      {/* Global Footer */}
+      <Footer />
 
     </div>
   );

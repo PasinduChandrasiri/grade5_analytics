@@ -15,7 +15,7 @@ import {
 import { MapPin, TrendingUp, TrendingDown, Download, Loader2 } from "lucide-react";
 import { exportSchoolComparisonPdf } from "@/lib/pdfExport";
 
-export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, stats, fileName }) {
+export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, stats, fileName, filterContext = {} }) {
   const [selectedZone, setSelectedZone] = useState("all");
   const [isExporting, setIsExporting] = useState(false);
 
@@ -40,6 +40,7 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, 
         stats,
         fileName,
         chartElementId: "school-comparison-chart-container",
+        filterContext,
       });
     } catch (error) {
       console.error("Failed to export School Comparison PDF:", error);
@@ -48,20 +49,29 @@ export default function SchoolComparisonChart({ schoolBreakdown, zoneBreakdown, 
     }
   };
 
+  const subjectLabel = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : "All Subjects";
+  const gradeLabel = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : "All Grades";
+
   return (
     <div className="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 sm:p-6 shadow-xl space-y-5">
       
       {/* Header & Zone Filter */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <MapPin className="w-5 h-5 text-cyan-400 shrink-0" />
             <h3 className="text-base sm:text-lg font-bold text-slate-100">
               Education Zone & School Performance Comparison
             </h3>
+            <span className="px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800/60 text-cyan-300 text-[11px] font-semibold">
+              {subjectLabel}
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-indigo-950/80 border border-indigo-800/60 text-indigo-300 text-[11px] font-semibold">
+              {gradeLabel}
+            </span>
           </div>
           <p className="text-xs text-slate-400 mt-0.5">
-            Benchmarking individual school performance against Education Zone averages (Likert 1.0–5.0 scale).
+            Benchmarking school performance in <strong className="text-slate-300">{subjectLabel}</strong> ({gradeLabel}) against Education Zone averages.
           </p>
         </div>
 

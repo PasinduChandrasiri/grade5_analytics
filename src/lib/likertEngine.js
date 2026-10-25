@@ -1,5 +1,5 @@
 /**
- * Likert Scale Engine for Mathematics Test Performance Evaluation
+ * Likert Scale Engine for Universal Subject Performance Evaluation
  * 
  * Likert Scale Mapping (based on Marks_Percentage):
  * 81 – 100% = 5 (Excellent)
@@ -111,7 +111,7 @@ export function getClassInterpretation(meanLikert) {
 
 /**
  * Clean & map raw CSV rows into standardized student evaluation records.
- * Required headers: Student_ID, Marks_Percentage, School_Name, (optional Zone_Name)
+ * Expected headers: Student_ID, Marks_Percentage, School_Name, Zone_Name, Grade, Class, Subject
  */
 export function parseAndCleanCsvData(rawRows) {
   if (!Array.isArray(rawRows) || rawRows.length === 0) {
@@ -131,11 +131,17 @@ export function parseAndCleanCsvData(rawRows) {
     const marksKey = keys.find(k => /marks[_\s]?percentage|marks|score|percentage|percent|math[s]?/i.test(k.trim())) || keys[1];
     const schoolKey = keys.find(k => /school[_\s]?name|school|institution|center/i.test(k.trim())) || keys[2];
     const zoneKey = keys.find(k => /zone[_\s]?name|zone|education[_\s]?zone/i.test(k.trim()));
+    const gradeKey = keys.find(k => /^grade$|grade[_\s]?level|standard|level/i.test(k.trim()));
+    const classKey = keys.find(k => /^class$|class[_\s]?name|section|division/i.test(k.trim()));
+    const subjectKey = keys.find(k => /^subject$|subject[_\s]?name|course|discipline/i.test(k.trim()));
 
     const rawId = row[idKey];
     const rawMarks = row[marksKey];
     const rawSchool = row[schoolKey];
     const rawZone = zoneKey ? row[zoneKey] : null;
+    const rawGrade = gradeKey ? row[gradeKey] : null;
+    const rawClass = classKey ? row[classKey] : null;
+    const rawSubject = subjectKey ? row[subjectKey] : null;
 
     if (!rawId && (rawMarks === undefined || rawMarks === null || rawMarks === "")) {
       return;
@@ -154,12 +160,19 @@ export function parseAndCleanCsvData(rawRows) {
     const studentId = String(rawId || `STD-${String(records.length + 1).padStart(3, "0")}`).trim();
     const schoolName = String(rawSchool || "Default School").trim();
     const zoneName = String(rawZone || "Central Zone").trim();
+    const gradeVal = String(rawGrade || "Grade 10").trim();
+    const classVal = String(rawClass || "Class A").trim();
+    const subjectVal = String(rawSubject || "General").trim();
 
     records.push({
       id: studentId,
       marks: Math.round(numMarks * 100) / 100,
       school: schoolName,
       zoneName: zoneName || "Central Zone",
+      grade: gradeVal,
+      class: classVal,
+      classVal: classVal,
+      subject: subjectVal,
       likertScore: likertObj.score,
       likertLabel: likertObj.label,
       color: likertObj.color,
@@ -321,28 +334,35 @@ export function aggregateEvaluationData(records) {
 
 /**
  * Generate School Comparison Report CSV String.
- * CSV Headers:
- * School, Sample Size, Mean, Grade, Rank, Excellent(5), Good(4), Satisfactory(3), Poor(2), Very Poor(1)
+ * Aggregates based on records and optional filterContext.
  */
-export function generateSchoolComparisonCsv(records) {
+export function generateSchoolComparisonCsv(records, filterContext = {}) {
   if (!records || records.length === 0) return "";
 
   // Group records by School_Name
   const schoolsMap = {};
   records.forEach((r) => {
     if (!schoolsMap[r.school]) {
-      schoolsMap[r.school] = [];
+      schoolsMap[r.school] = {
+        schoolName: r.school,
+        zoneName: r.zoneName || "Central Zone",
+        list: [],
+      };
     }
-    schoolsMap[r.school].push(r);
+    schoolsMap[r.school].list.push(r);
   });
 
   // Calculate stats per school
-  const schoolStats = Object.keys(schoolsMap).map((schoolName) => {
-    const list = schoolsMap[schoolName];
+  const schoolStats = Object.values(schoolsMap).map((sObj) => {
+    const list = sObj.list;
     const sampleSize = list.length;
     const totalLikert = list.reduce((acc, r) => acc + r.likertScore, 0);
-    const mean = totalLikert / sampleSize;
-    const roundedMean = Math.round(mean * 100) / 100;
+    const meanLikert = totalLikert / sampleSize;
+    const roundedMean = Math.round(meanLikert * 100) / 100;
+    const totalMarks = list.reduce((acc, r) => acc + r.marks, 0);
+    const meanMarks = Math.round((totalMarks / sampleSize) * 100) / 100;
+    const passCount = list.filter((r) => r.marks >= 40).length;
+    const passRate = Math.round((passCount / sampleSize) * 1000) / 10;
     const grade = getSchoolGrade(roundedMean);
 
     // Count per Likert level
@@ -352,9 +372,12 @@ export function generateSchoolComparisonCsv(records) {
     });
 
     return {
-      schoolName,
+      schoolName: sObj.schoolName,
+      zoneName: sObj.zoneName,
       sampleSize,
       mean: roundedMean,
+      meanMarks,
+      passRate,
       grade,
       counts,
     };
@@ -363,13 +386,21 @@ export function generateSchoolComparisonCsv(records) {
   // Sort by Mean score descending
   schoolStats.sort((a, b) => b.mean - a.mean);
 
-  // Build CSV content with counts (excluding text bar graph column)
-  let csv = "School, Sample Size, Mean, Grade, Rank, Excellent(5), Good(4), Satisfactory(3), Poor(2), Very Poor(1)\n";
+  // Context metadata comments if filtered
+  let csv = "";
+  if (filterContext.subject || filterContext.grade || filterContext.classVal) {
+    const sTxt = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : "All Subjects";
+    const gTxt = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : "All Grades";
+    const cTxt = filterContext.classVal && filterContext.classVal !== "all" ? filterContext.classVal : "All Classes";
+    csv += `# Filter Scope: Subject: ${sTxt} | Grade: ${gTxt} | Class: ${cTxt}\n`;
+  }
+
+  csv += "School,Education Zone,Sample Size,Likert Mean,Mean Marks (%),Grade,Rank,Pass Rate (%),Excellent (5),Good (4),Satisfactory (3),Poor (2),Very Poor (1)\n";
   schoolStats.forEach((item, index) => {
     const rank = index + 1;
-    // Escape school name if it contains commas
     const escapedSchool = item.schoolName.includes(",") ? `"${item.schoolName}"` : item.schoolName;
-    csv += `${escapedSchool}, ${item.sampleSize}, ${item.mean.toFixed(2)}, ${item.grade}, ${rank}, ${item.counts[5]}, ${item.counts[4]}, ${item.counts[3]}, ${item.counts[2]}, ${item.counts[1]}\n`;
+    const escapedZone = item.zoneName.includes(",") ? `"${item.zoneName}"` : item.zoneName;
+    csv += `${escapedSchool},${escapedZone},${item.sampleSize},${item.mean.toFixed(2)},${item.meanMarks.toFixed(1)}%,${item.grade},${rank},${item.passRate.toFixed(1)}%,${item.counts[5]},${item.counts[4]},${item.counts[3]},${item.counts[2]},${item.counts[1]}\n`;
   });
 
   return csv;

@@ -4,10 +4,13 @@ import React, { useState, useMemo } from "react";
 import { Search, ArrowUpDown, ChevronLeft, ChevronRight, Users, Download, Loader2 } from "lucide-react";
 import { exportStudentRegisterPdf } from "@/lib/pdfExport";
 
-export default function StudentDataTable({ records, stats, fileName }) {
+export default function StudentDataTable({ records, stats, fileName, filterContext = {} }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLikert, setSelectedLikert] = useState("all");
   const [selectedSchool, setSelectedSchool] = useState("all");
+  const [selectedSubject, setSelectedSubject] = useState("all");
+  const [selectedGrade, setSelectedGrade] = useState("all");
+  const [selectedClass, setSelectedClass] = useState("all");
   const [sortField, setSortField] = useState("marks");
   const [sortOrder, setSortOrder] = useState("desc");
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,19 +19,44 @@ export default function StudentDataTable({ records, stats, fileName }) {
 
   const uniqueSchools = useMemo(() => {
     if (!records) return [];
-    return Array.from(new Set(records.map((r) => r.school)));
+    return Array.from(new Set(records.map((r) => r.school))).filter(Boolean);
+  }, [records]);
+
+  const uniqueSubjects = useMemo(() => {
+    if (!records) return [];
+    return Array.from(new Set(records.map((r) => r.subject))).filter(Boolean);
+  }, [records]);
+
+  const uniqueGrades = useMemo(() => {
+    if (!records) return [];
+    return Array.from(new Set(records.map((r) => r.grade))).filter(Boolean);
+  }, [records]);
+
+  const uniqueClasses = useMemo(() => {
+    if (!records) return [];
+    return Array.from(new Set(records.map((r) => r.class || r.classVal))).filter(Boolean);
   }, [records]);
 
   const filteredRecords = useMemo(() => {
     if (!records) return [];
     return records
       .filter((r) => {
+        const q = searchTerm.toLowerCase().trim();
         const matchSearch =
-          r.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          r.school.toLowerCase().includes(searchTerm.toLowerCase());
+          !q ||
+          r.id.toLowerCase().includes(q) ||
+          r.school.toLowerCase().includes(q) ||
+          (r.subject && r.subject.toLowerCase().includes(q)) ||
+          (r.grade && r.grade.toLowerCase().includes(q)) ||
+          ((r.class || r.classVal) && (r.class || r.classVal).toLowerCase().includes(q));
+
         const matchLikert = selectedLikert === "all" || r.likertScore === Number(selectedLikert);
         const matchSchool = selectedSchool === "all" || r.school === selectedSchool;
-        return matchSearch && matchLikert && matchSchool;
+        const matchSubject = selectedSubject === "all" || r.subject === selectedSubject;
+        const matchGrade = selectedGrade === "all" || r.grade === selectedGrade;
+        const matchClass = selectedClass === "all" || (r.class || r.classVal) === selectedClass;
+
+        return matchSearch && matchLikert && matchSchool && matchSubject && matchGrade && matchClass;
       })
       .sort((a, b) => {
         let valA = a[sortField];
@@ -39,7 +67,17 @@ export default function StudentDataTable({ records, stats, fileName }) {
         if (valA > valB) return sortOrder === "asc" ? 1 : -1;
         return 0;
       });
-  }, [records, searchTerm, selectedLikert, selectedSchool, sortField, sortOrder]);
+  }, [
+    records,
+    searchTerm,
+    selectedLikert,
+    selectedSchool,
+    selectedSubject,
+    selectedGrade,
+    selectedClass,
+    sortField,
+    sortOrder,
+  ]);
 
   const totalPages = Math.ceil(filteredRecords.length / pageSize) || 1;
   const paginatedRecords = useMemo(() => {
@@ -61,6 +99,9 @@ export default function StudentDataTable({ records, stats, fileName }) {
     try {
       setIsExporting(true);
       const activeFilters = [];
+      if (selectedSubject !== "all") activeFilters.push(`Subject: ${selectedSubject}`);
+      if (selectedGrade !== "all") activeFilters.push(`Grade: ${selectedGrade}`);
+      if (selectedClass !== "all") activeFilters.push(`Class: ${selectedClass}`);
       if (selectedSchool !== "all") activeFilters.push(`School: ${selectedSchool}`);
       if (selectedLikert !== "all") activeFilters.push(`Score: ${selectedLikert}`);
       if (searchTerm.trim()) activeFilters.push(`Search: "${searchTerm.trim()}"`);
@@ -71,6 +112,12 @@ export default function StudentDataTable({ records, stats, fileName }) {
         fileName,
         stats,
         filterSummary,
+        filterContext: {
+          ...filterContext,
+          subject: selectedSubject !== "all" ? selectedSubject : filterContext.subject,
+          grade: selectedGrade !== "all" ? selectedGrade : filterContext.grade,
+          classVal: selectedClass !== "all" ? selectedClass : filterContext.classVal,
+        },
       });
     } catch (error) {
       console.error("Failed to export Student Register PDF:", error);
@@ -102,19 +149,61 @@ export default function StudentDataTable({ records, stats, fileName }) {
             <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search ID or School..."
+              placeholder="Search ID, School, Subject..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-44"
+              className="pl-8 pr-3 py-1.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-200 focus:outline-none focus:border-cyan-500 w-full sm:w-48"
             />
           </div>
+
+          {/* Subject filter (if multiple) */}
+          {uniqueSubjects.length > 1 && (
+            <select
+              value={selectedSubject}
+              onChange={(e) => { setSelectedSubject(e.target.value); setCurrentPage(1); }}
+              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
+            >
+              <option value="all">All Subjects</option>
+              {uniqueSubjects.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+          )}
+
+          {/* Grade filter (if multiple) */}
+          {uniqueGrades.length > 1 && (
+            <select
+              value={selectedGrade}
+              onChange={(e) => { setSelectedGrade(e.target.value); setCurrentPage(1); }}
+              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
+            >
+              <option value="all">All Grades</option>
+              {uniqueGrades.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          )}
+
+          {/* Class filter (if multiple) */}
+          {uniqueClasses.length > 1 && (
+            <select
+              value={selectedClass}
+              onChange={(e) => { setSelectedClass(e.target.value); setCurrentPage(1); }}
+              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
+            >
+              <option value="all">All Classes</option>
+              {uniqueClasses.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          )}
 
           {/* School filter */}
           {uniqueSchools.length > 1 && (
             <select
               value={selectedSchool}
               onChange={(e) => { setSelectedSchool(e.target.value); setCurrentPage(1); }}
-              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto max-w-full sm:max-w-[150px]"
+              className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto max-w-full sm:max-w-[140px]"
             >
               <option value="all">All Schools</option>
               {uniqueSchools.map((s) => (
@@ -129,7 +218,7 @@ export default function StudentDataTable({ records, stats, fileName }) {
             onChange={(e) => { setSelectedLikert(e.target.value); setCurrentPage(1); }}
             className="py-1.5 px-2.5 text-xs rounded-lg bg-slate-950 border border-slate-800 text-slate-300 focus:outline-none focus:border-cyan-500 w-full sm:w-auto"
           >
-            <option value="all">All Likert Scores</option>
+            <option value="all">All Likert</option>
             <option value="5">Score 5 – Excellent</option>
             <option value="4">Score 4 – Good</option>
             <option value="3">Score 3 – Satisfactory</option>
@@ -162,7 +251,7 @@ export default function StudentDataTable({ records, stats, fileName }) {
 
       {/* Table (Responsive Horizontal Scroll) */}
       <div className="overflow-x-auto rounded-xl border border-slate-800 -mx-1 sm:mx-0">
-        <table className="w-full text-left text-xs text-slate-300 min-w-[540px]">
+        <table className="w-full text-left text-xs text-slate-300 min-w-[720px]">
           <thead className="bg-slate-950 text-slate-400 font-semibold uppercase tracking-wider text-[11px] border-b border-slate-800">
             <tr>
               <th className="py-2.5 px-3 sm:px-4">#</th>
@@ -177,6 +266,24 @@ export default function StudentDataTable({ records, stats, fileName }) {
                 className="py-2.5 px-3 sm:px-4 cursor-pointer hover:text-slate-100 transition-colors select-none"
               >
                 <div className="flex items-center gap-1">School Name <ArrowUpDown className="w-3 h-3 text-slate-600" /></div>
+              </th>
+              <th
+                onClick={() => handleSort("subject")}
+                className="py-2.5 px-3 sm:px-4 cursor-pointer hover:text-slate-100 transition-colors select-none"
+              >
+                <div className="flex items-center gap-1">Subject <ArrowUpDown className="w-3 h-3 text-slate-600" /></div>
+              </th>
+              <th
+                onClick={() => handleSort("grade")}
+                className="py-2.5 px-3 sm:px-4 cursor-pointer hover:text-slate-100 transition-colors select-none"
+              >
+                <div className="flex items-center gap-1">Grade <ArrowUpDown className="w-3 h-3 text-slate-600" /></div>
+              </th>
+              <th
+                onClick={() => handleSort("class")}
+                className="py-2.5 px-3 sm:px-4 cursor-pointer hover:text-slate-100 transition-colors select-none"
+              >
+                <div className="flex items-center gap-1">Class <ArrowUpDown className="w-3 h-3 text-slate-600" /></div>
               </th>
               <th
                 onClick={() => handleSort("marks")}
@@ -203,11 +310,22 @@ export default function StudentDataTable({ records, stats, fileName }) {
                   <td className="py-2.5 px-3 sm:px-4 font-semibold text-slate-200">
                     {item.id}
                   </td>
-                  <td className="py-2.5 px-3 sm:px-4 text-slate-400 max-w-[150px] truncate" title={item.school}>
+                  <td className="py-2.5 px-3 sm:px-4 text-slate-400 max-w-[140px] truncate" title={item.school}>
                     {item.school}
                   </td>
+                  <td className="py-2.5 px-3 sm:px-4">
+                    <span className="inline-block px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/20 font-medium text-[11px]">
+                      {item.subject || "General"}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-3 sm:px-4 text-slate-300 font-medium">
+                    {item.grade || "Grade 10"}
+                  </td>
+                  <td className="py-2.5 px-3 sm:px-4 text-slate-400 font-mono">
+                    {item.class || item.classVal || "Class A"}
+                  </td>
                   <td className="py-2.5 px-3 sm:px-4 font-mono font-bold text-slate-100">
-                    {item.marks.toFixed(1)}%
+                    {Number(item.marks).toFixed(1)}%
                   </td>
                   <td className="py-2.5 px-3 sm:px-4">
                     <span
@@ -231,7 +349,7 @@ export default function StudentDataTable({ records, stats, fileName }) {
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-10 text-center text-slate-500 text-xs">
+                <td colSpan={9} className="py-10 text-center text-slate-500 text-xs">
                   No student records match the selected filters.
                 </td>
               </tr>

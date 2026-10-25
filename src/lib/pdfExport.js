@@ -33,7 +33,7 @@ function drawReportHeader(doc, { title, subtitle, fileName, stats, totalRecords 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
   doc.setTextColor(6, 182, 212);
-  doc.text("MATHEMATICS PERFORMANCE EVALUATION SYSTEM", 14, 9);
+  doc.text("UNIVERSAL EDUCATIONAL PERFORMANCE EVALUATOR", 14, 9);
 
   // Report Section Title
   doc.setFont("helvetica", "bold");
@@ -78,7 +78,7 @@ function addPageFooters(doc) {
     doc.setFontSize(7.5);
     doc.setTextColor(100, 116, 139); // slate-500
     doc.text(
-      "Mathematics Likert Performance Evaluator • Confidential Educational Record",
+      "Universal Educational Performance Evaluator • Confidential Educational Record",
       14,
       pageHeight - 7
     );
@@ -113,7 +113,7 @@ async function captureElementImage(elementId) {
  * PART 1: EXPORT LIKERT SCORE FREQUENCY DISTRIBUTION AS PDF
  * ────────────────────────────────────────────────────────────
  */
-export async function exportLikertDistributionPdf({ distribution, stats, fileName, chartElementId }) {
+export async function exportLikertDistributionPdf({ distribution, stats, fileName, chartElementId, filterContext = {} }) {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -122,10 +122,25 @@ export async function exportLikertDistributionPdf({ distribution, stats, fileNam
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
+  const subjectTxt = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : null;
+  const gradeTxt = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : null;
+  const classTxt = filterContext.classVal && filterContext.classVal !== "all" ? filterContext.classVal : null;
+
+  let reportTitle = "Likert Score Frequency Distribution Report";
+  if (subjectTxt) {
+    reportTitle = `${subjectTxt} Performance Report${gradeTxt ? ` - ${gradeTxt}` : ""}`;
+  } else if (gradeTxt) {
+    reportTitle = `Performance Distribution Report - ${gradeTxt}`;
+  }
+
+  const scopeParts = [subjectTxt || "All Subjects"];
+  if (gradeTxt) scopeParts.push(gradeTxt);
+  if (classTxt) scopeParts.push(classTxt);
+
   // Header
   drawReportHeader(doc, {
-    title: "Likert Score Frequency Distribution Report",
-    subtitle: "5-Point Likert Performance Distribution & Cohort Frequency Analysis",
+    title: reportTitle,
+    subtitle: `5-Point Likert Performance Distribution • ${scopeParts.join(" • ")}`,
     fileName,
     stats,
     totalRecords: stats?.sampleSize,
@@ -266,7 +281,9 @@ export async function exportLikertDistributionPdf({ distribution, stats, fileNam
   addPageFooters(doc);
 
   // Save
-  doc.save("Likert_Score_Frequency_Distribution.pdf");
+  const safeSubj = (filterContext.subject || "All_Subjects").replace(/\s+/g, "_");
+  const safeGrade = (filterContext.grade || "All_Grades").replace(/\s+/g, "_");
+  doc.save(`${safeSubj}_${safeGrade}_Likert_Distribution.pdf`);
 }
 
 /**
@@ -274,7 +291,7 @@ export async function exportLikertDistributionPdf({ distribution, stats, fileNam
  * PART 2: EXPORT EDUCATION ZONE & SCHOOL COMPARISON AS PDF
  * ────────────────────────────────────────────────────────────
  */
-export async function exportSchoolComparisonPdf({ schoolBreakdown, zoneBreakdown, stats, fileName, chartElementId }) {
+export async function exportSchoolComparisonPdf({ schoolBreakdown, zoneBreakdown, stats, fileName, chartElementId, filterContext = {} }) {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -283,10 +300,25 @@ export async function exportSchoolComparisonPdf({ schoolBreakdown, zoneBreakdown
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
+  const subjectTxt = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : null;
+  const gradeTxt = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : null;
+  const classTxt = filterContext.classVal && filterContext.classVal !== "all" ? filterContext.classVal : null;
+
+  let reportTitle = "Education Zone & School Performance Comparison";
+  if (subjectTxt) {
+    reportTitle = `${subjectTxt} School Performance${gradeTxt ? ` - ${gradeTxt}` : ""}`;
+  } else if (gradeTxt) {
+    reportTitle = `School Performance Comparison - ${gradeTxt}`;
+  }
+
+  const scopeParts = [subjectTxt || "All Subjects"];
+  if (gradeTxt) scopeParts.push(gradeTxt);
+  if (classTxt) scopeParts.push(classTxt);
+
   // Header
   drawReportHeader(doc, {
-    title: "Education Zone & School Performance Comparison",
-    subtitle: "Comparative Benchmarking of School & Zone Likert Mean Performance",
+    title: reportTitle,
+    subtitle: `Comparative Benchmarking of School & Zone Likert Mean Performance • ${scopeParts.join(" • ")}`,
     fileName,
     stats,
     totalRecords: stats?.sampleSize,
@@ -472,7 +504,9 @@ export async function exportSchoolComparisonPdf({ schoolBreakdown, zoneBreakdown
   addPageFooters(doc);
 
   // Save
-  doc.save("Education_Zone_and_School_Performance_Comparison.pdf");
+  const safeSubj = (filterContext.subject || "All_Subjects").replace(/\s+/g, "_");
+  const safeGrade = (filterContext.grade || "All_Grades").replace(/\s+/g, "_");
+  doc.save(`${safeSubj}_${safeGrade}_School_Comparison.pdf`);
 }
 
 /**
@@ -480,7 +514,7 @@ export async function exportSchoolComparisonPdf({ schoolBreakdown, zoneBreakdown
  * PART 3: EXPORT STUDENT EVALUATION REGISTER AS PDF
  * ────────────────────────────────────────────────────────────
  */
-export async function exportStudentRegisterPdf({ records, fileName, stats, filterSummary }) {
+export async function exportStudentRegisterPdf({ records, fileName, stats, filterSummary, filterContext = {} }) {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -489,10 +523,25 @@ export async function exportStudentRegisterPdf({ records, fileName, stats, filte
 
   const pageWidth = doc.internal.pageSize.getWidth();
 
+  const subjectTxt = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : null;
+  const gradeTxt = filterContext.grade && filterContext.grade !== "all" ? filterContext.grade : null;
+  const classTxt = filterContext.classVal && filterContext.classVal !== "all" ? filterContext.classVal : null;
+
+  let reportTitle = "Student Evaluation Register";
+  if (subjectTxt) {
+    reportTitle = `${subjectTxt} Student Evaluation Register${gradeTxt ? ` - ${gradeTxt}` : ""}`;
+  } else if (gradeTxt) {
+    reportTitle = `Student Evaluation Register - ${gradeTxt}`;
+  }
+
+  const scopeParts = [subjectTxt || "All Subjects"];
+  if (gradeTxt) scopeParts.push(gradeTxt);
+  if (classTxt) scopeParts.push(classTxt);
+
   // Header
   drawReportHeader(doc, {
-    title: "Student Evaluation Register",
-    subtitle: filterSummary ? `Filtered Register • ${filterSummary}` : "Complete Official Student Performance Register",
+    title: reportTitle,
+    subtitle: filterSummary ? `Filtered Register • ${filterSummary}` : `Official Student Performance Register • ${scopeParts.join(" • ")}`,
     fileName,
     stats,
     totalRecords: records?.length,
@@ -540,12 +589,14 @@ export async function exportStudentRegisterPdf({ records, fileName, stats, filte
 
   currentY += boxHeight + 8;
 
-  // Complete Student Evaluation Register Table
+  // Complete Student Evaluation Register Table with Subject, Grade, and Class
   const tableData = (records || []).map((r, index) => [
     String(index + 1),
     r.id,
     r.school,
-    r.zoneName || "N/A",
+    r.subject || "General",
+    r.grade || "Grade 10",
+    r.class || r.classVal || "Class A",
     `${Number(r.marks).toFixed(1)}%`,
     `Score ${r.likertScore}`,
     r.likertLabel,
@@ -553,38 +604,40 @@ export async function exportStudentRegisterPdf({ records, fileName, stats, filte
 
   autoTable(doc, {
     startY: currentY,
-    head: [["#", "Student ID", "School Name", "Education Zone", "Marks (%)", "Likert Score", "Performance Level"]],
+    head: [["#", "Student ID", "School Name", "Subject", "Grade", "Class", "Marks (%)", "Likert", "Performance"]],
     body: tableData,
     theme: "striped",
     headStyles: {
       fillColor: [15, 23, 42],
       textColor: [255, 255, 255],
       fontStyle: "bold",
-      fontSize: 7.5,
+      fontSize: 7.2,
     },
     bodyStyles: {
-      fontSize: 7.5,
+      fontSize: 7.2,
       textColor: [30, 41, 59],
     },
     columnStyles: {
-      0: { halign: "center", width: 12, textColor: [100, 116, 139] },
-      1: { fontStyle: "bold", width: 28 },
-      2: { width: 44 },
-      3: { width: 34 },
-      4: { halign: "center", fontStyle: "bold", width: 20 },
-      5: { halign: "center", fontStyle: "bold", width: 22 },
-      6: { halign: "center", fontStyle: "bold", width: 26 },
+      0: { halign: "center", width: 10, textColor: [100, 116, 139] },
+      1: { fontStyle: "bold", width: 22 },
+      2: { width: 38 },
+      3: { width: 24, fontStyle: "bold" },
+      4: { halign: "center", width: 18 },
+      5: { halign: "center", width: 16 },
+      6: { halign: "center", fontStyle: "bold", width: 18 },
+      7: { halign: "center", fontStyle: "bold", width: 18 },
+      8: { halign: "center", fontStyle: "bold", width: 18 },
     },
     styles: {
-      cellPadding: 2,
+      cellPadding: 1.8,
       lineWidth: 0.2,
       lineColor: [226, 232, 240],
     },
     margin: { left: 14, right: 14 },
     didDrawCell: (data) => {
       // Colorize Likert Score text in table
-      if (data.section === "body" && data.column.index === 5) {
-        const text = data.cell.raw;
+      if (data.section === "body" && data.column.index === 7) {
+        const text = String(data.cell.raw || "");
         if (text.includes("5")) doc.setTextColor(16, 185, 129);
         else if (text.includes("4")) doc.setTextColor(6, 182, 212);
         else if (text.includes("3")) doc.setTextColor(99, 102, 241);
@@ -598,5 +651,7 @@ export async function exportStudentRegisterPdf({ records, fileName, stats, filte
   addPageFooters(doc);
 
   // Save
-  doc.save("Student_Evaluation_Register.pdf");
+  const safeSubj = (filterContext.subject || "All_Subjects").replace(/\s+/g, "_");
+  const safeGrade = (filterContext.grade || "All_Grades").replace(/\s+/g, "_");
+  doc.save(`${safeSubj}_${safeGrade}_Student_Evaluation_Register.pdf`);
 }

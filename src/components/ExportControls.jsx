@@ -10,12 +10,18 @@ import {
   exportStudentRegisterPdf,
 } from "@/lib/pdfExport";
 
-export default function ExportControls({ records, stats, fileName }) {
+export default function ExportControls({ records, stats, fileName, filterContext = {} }) {
   const [exportingType, setExportingType] = useState(null);
 
   if (!records || records.length === 0) return null;
 
   const currentStats = stats || aggregateEvaluationData(records);
+
+  const activeFilters = [];
+  if (filterContext.subject && filterContext.subject !== "all") activeFilters.push(`Subject: ${filterContext.subject}`);
+  if (filterContext.grade && filterContext.grade !== "all") activeFilters.push(`Grade: ${filterContext.grade}`);
+  if (filterContext.classVal && filterContext.classVal !== "all") activeFilters.push(`Class: ${filterContext.classVal}`);
+  const filterSummary = activeFilters.length > 0 ? activeFilters.join(" | ") : "All Evaluated Students";
 
   // 1. Likert Distribution PDF
   const handleDownloadLikertPdf = async () => {
@@ -26,6 +32,7 @@ export default function ExportControls({ records, stats, fileName }) {
         stats: currentStats,
         fileName,
         chartElementId: "likert-distribution-chart-container",
+        filterContext,
       });
     } catch (err) {
       console.error("Failed to export Likert Distribution PDF:", err);
@@ -44,6 +51,7 @@ export default function ExportControls({ records, stats, fileName }) {
         stats: currentStats,
         fileName,
         chartElementId: "school-comparison-chart-container",
+        filterContext,
       });
     } catch (err) {
       console.error("Failed to export School Comparison PDF:", err);
@@ -60,7 +68,8 @@ export default function ExportControls({ records, stats, fileName }) {
         records,
         fileName,
         stats: currentStats,
-        filterSummary: "All Evaluated Students",
+        filterSummary,
+        filterContext,
       });
     } catch (err) {
       console.error("Failed to export Student Register PDF:", err);
@@ -86,19 +95,24 @@ export default function ExportControls({ records, stats, fileName }) {
   };
 
   const handleDownloadSchoolReport = () => {
-    const csvContent = generateSchoolComparisonCsv(records);
-    downloadCsvFile(csvContent, "School_Comparison_Report.csv");
+    const csvContent = generateSchoolComparisonCsv(records, filterContext);
+    const safeSubj = (filterContext.subject || "All_Subjects").replace(/\s+/g, "_");
+    const safeGrade = (filterContext.grade || "All_Grades").replace(/\s+/g, "_");
+    downloadCsvFile(csvContent, `${safeSubj}_${safeGrade}_School_Comparison.csv`);
   };
 
   const handleDownloadHtmlReport = () => {
     if (!currentStats) return;
+
+    const subjectStr = filterContext.subject && filterContext.subject !== "all" ? filterContext.subject : "Universal Subjects";
+    const gradeStr = filterContext.grade && filterContext.grade !== "all" ? ` - ${filterContext.grade}` : "";
 
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mathematics Likert Performance Report</title>
+  <title>${subjectStr} Likert Performance Report${gradeStr}</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; background: #090D16; color: #f8fafc; padding: 1.5rem; }
     h1 { color: #38bdf8; text-align: center; font-size: 1.5rem; }
@@ -114,7 +128,7 @@ export default function ExportControls({ records, stats, fileName }) {
   </style>
 </head>
 <body>
-  <h1>Mathematics Likert Performance Report</h1>
+  <h1>Universal Educational Performance Report: ${subjectStr}${gradeStr}</h1>
   
   <div class="kpi-grid">
     <div class="kpi-box"><div class="kpi-val">${currentStats.meanLikert.toFixed(2)}</div><div>Overall Likert Mean</div></div>
